@@ -26,25 +26,34 @@ api.on('message', function(message)
 	let chatId = message.chat.id;
 
     if (message.text == '/start') {
+		if (subscriptions[chatId] && subscriptions[chatId].running) {
+			sendBasicText(chatId, 'Timer is already running! Work while you can!');
+			return;
+		}
+
 		subscriptions[chatId] = {
 			running: true
 		};
 
-		goHard(chatId);
-		sendBasicText(chatId, 'in case of cheating type /finish');
-
+		goHard(chatId)
+			.then(() => sendBasicText(chatId, 'in case of cheating type /finish'))
+		
 		return;
 	}
 
 	if (message.text == '/finish') {
-		subscriptions[chatId] = {
-			running: false
-		};
+		if (subscriptions[chatId] && subscriptions[chatId].running) {
+			clearTimeout(subscriptions[chatId].goHardSetTimeout);
+			clearTimeout(subscriptions[chatId].relaxSetTimeout);
 
-		clearTimeout(subscriptions[chatId].goHardSetTimeout);
-		clearTimeout(subscriptions[chatId].relaxSetTimeout);
+			subscriptions[chatId] = {
+				running: false
+			};
 
-		sendBasicText(chatId, 'pomodorro stopped');
+			sendBasicText(chatId, 'pomodorro stopped');
+		} else {
+			sendBasicText(chatId, 'pomodorro is not running!');
+		}
 
 		return;
 	}
@@ -57,19 +66,21 @@ api.on('message', function(message)
 });
 
 function relax(chatId) {
-	if (subscriptions[chatId].running) {
+	return new Promise( /* executor */ function(resolve, reject) { 
 		sendBasicText(chatId, 'Relax, take it easy, tomorrow is another day');
-
 		subscriptions[chatId].relaxSetTimeout = setTimeout(goHard.bind(null, chatId), _5MIN);
-	}
+
+		resolve();
+	})
 }
 
 function goHard(chatId) {
-	if (subscriptions[chatId].running) {
+	return new Promise( /* executor */ function(resolve, reject) { 
 		sendBasicText(chatId, 'Go hard or go home!');
-
 		subscriptions[chatId].goHardSetTimeout = setTimeout(relax.bind(null, chatId), _25MIN);
-	}
+
+		resolve();
+	})
 }
 
 function sendBasicText(chatId, text) {
