@@ -4,10 +4,23 @@ let subscriptions = {};
 let _25MIN = 25 * 60 * 1000;
 let _5MIN = 5 * 60 * 1000;
 
+let keyboard = {
+	keyboard: [[
+		{
+			text: '/start'
+		},
+		{
+			text: '/finish'
+		}
+	]],
+	resize_keyboard: true
+};
+
 var api = new telegram({
         token: '250208713:AAFuZWmYhgYO83JdnKwK1mNQ4ehwoGtMFpI',
 		updates: {
-            enabled: true
+            enabled: true,
+			get_interval: 100
     	}
 });
 
@@ -86,6 +99,7 @@ function goHard(chatId) {
 function sendBasicText(chatId, text) {
 	api.sendMessage({
 		chat_id: chatId,
-		text: text
+		text: text,
+		reply_markup: JSON.stringify(keyboard)
 	});
 }
